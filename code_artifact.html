@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мой Список Желаний (Wishlist) — ₸</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#fff1f2',
+                            100: '#ffe4e6',
+                            200: '#fecdd3',
+                            500: '#f43f5e',
+                            600: '#e11d48',
+                            700: '#be123c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #fcf8f6;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="font-sans text-stone-800 min-h-screen flex flex-col justify-between antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-30 border-b border-rose-100/80 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
+            
+            <!-- Logo & Title -->
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-500 flex items-center justify-center text-white shadow-md shadow-rose-200">
+                    <i class="fa-solid fa-gift text-lg"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">Вишлист</h1>
+                        <span id="modeBadge" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-700">
+                            Владелец
+                        </span>
+                    </div>
+                    <p id="headerSubtitle" class="text-xs text-stone-500">Мой список желаний в тенге (₸)</p>
+                </div>
+            </div>
+
+            <!-- Role Switcher & Header Controls -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                
+                <!-- Toggle Mode Pill -->
+                <div class="bg-stone-100 p-1 rounded-2xl flex items-center border border-stone-200/60">
+                    <button id="btnRoleOwner" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 bg-white text-stone-800 shadow-sm">
+                        <i class="fa-solid fa-user-gear"></i>
+                        <span class="hidden sm:inline">Я (Владелец)</span>
+                    </button>
+                    <button id="btnRoleGuest" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 text-stone-500 hover:text-stone-800">
+                        <i class="fa-solid fa-users"></i>
+                        <span class="hidden sm:inline">Гость (Друг)</span>
+                    </button>
+                </div>
+
+                <!-- Owner-only Add Button -->
+                <button id="openAddModalBtn" class="owner-only inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-medium text-xs sm:text-sm shadow-sm hover:shadow-rose-200 shadow-rose-300/50 transition-all active:scale-95">
+                    <i class="fa-solid fa-plus"></i>
+                    <span class="hidden sm:inline">Добавить</span>
+                </button>
+
+                <!-- Share Link Button -->
+                <button id="shareBtn" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-medium text-xs sm:text-sm transition-all active:scale-95" title="Поделиться вишлистом">
+                    <i class="fa-solid fa-share-nodes"></i>
+                    <span class="hidden md:inline">Поделиться</span>
+                </button>
+
+                <!-- Reset Demo Button -->
+                <button id="resetDemoBtn" class="owner-only p-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-500 transition-all text-xs" title="Восстановить демо-данные">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div id="guestNoticeBar" class="bg-emerald-500 text-white px-4 py-2 text-xs font-medium text-center hidden">
+        <i class="fa-solid fa-eye mr-1.5"></i> Вы просматриваете вишлист как <strong>Гость</strong>. Вы можете забронировать любой свободный подарок для друга!
+    </div>
+
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow space-y-8">
+
+        <!-- Stats Section (Owner view shows Prices + Counts, Guest view shows Counts ONLY) -->
+        <section class="space-y-4">
+            <div id="statsGrid" class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                
+                <!-- Count Card -->
+                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-rose-100 shadow-sm flex items-center gap-3 sm:gap-4">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-rose-50 flex items-center justify-center text-rose-600 text-lg sm:text-xl font-bold shrink-0">
+                        <i class="fa-solid fa-boxes-packing"></i>
+                    </div>
+                    <div>
+                        <span class="text-[10px] sm:text-xs font-semibold text-stone-400 uppercase tracking-wider block">Всего желаний</span>
+                        <h3 id="statTotalItems" class="text-xl sm:text-2xl font-extrabold text-stone-800">0</h3>
+                    </div>
+                </div>
+
+                <!-- Reserved Count Card -->
+                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-rose-100 shadow-sm flex items-center gap-3 sm:gap-4">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 text-lg sm:text-xl font-bold shrink-0">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div>
+                        <span class="text-[10px] sm:text-xs font-semibold text-stone-400 uppercase tracking-wider block">Забронировано</span>
+                        <h3 id="statReservedItems" class="text-xl sm:text-2xl font-extrabold text-stone-800">0</h3>
+                    </div>
+                </div>
+
+                <!-- Owner-Only Price Card: Total Amount -->
+                <div class="owner-only bg-white p-4 sm:p-5 rounded-2xl border border-rose-100 shadow-sm flex items-center gap-3 sm:gap-4">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 text-lg sm:text-xl font-bold shrink-0">
+                        <i class="fa-solid fa-tenge-sign"></i>
+                    </div>
+                    <div class="overflow-hidden">
+                        <span class="text-[10px] sm:text-xs font-semibold text-stone-400 uppercase tracking-wider block truncate">Общая сумма</span>
+                        <h3 id="statTotalPrice" class="text-lg sm:text-xl font-extrabold text-stone-800 truncate">0 ₸</h3>
+                    </div>
+                </div>
+
+                <!-- Owner-Only Price Card: Reserved Amount -->
+                <div class="owner-only bg-white p-4 sm:p-5 rounded-2xl border border-rose-100 shadow-sm flex items-center gap-3 sm:gap-4">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 text-lg sm:text-xl font-bold shrink-0">
+                        <i class="fa-solid fa-gift"></i>
+                    </div>
+                    <div class="overflow-hidden">
+                        <span class="text-[10px] sm:text-xs font-semibold text-stone-400 uppercase tracking-wider block truncate">Сумма брони</span>
+                        <h3 id="statReservedPrice" class="text-lg sm:text-xl font-extrabold text-stone-800 truncate">0 ₸</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Owner-Only Progress Bar -->
+            <div id="progressSection" class="owner-only bg-white p-4 rounded-2xl border border-stone-200/70 shadow-sm space-y-2">
+                <div class="flex justify-between items-center text-xs font-semibold">
+                    <span class="text-stone-600">Прогресс выполнения вишлиста:</span>
+                    <span id="progressPercent" class="text-rose-600 font-bold">0%</span>
+                </div>
+                <div class="w-full h-3 bg-stone-100 rounded-full overflow-hidden">
+                    <div id="progressBar" class="h-full bg-gradient-to-r from-rose-500 to-pink-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white p-4 sm:p-5 rounded-2xl border border-stone-200/70 shadow-sm space-y-4">
+            <div class="flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center">
+                <!-- Search Input -->
+                <div class="relative flex-grow max-w-md">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-sm"></i>
+                    <input type="text" id="searchInput" placeholder="Поиск подарка по названию или заметке..." class="w-full pl-10 pr-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all">
+                </div>
+
+                <!-- Sort Control -->
+                <div class="flex items-center gap-2">
+                    <label for="sortBy" class="text-xs font-medium text-stone-500 whitespace-nowrap"><i class="fa-solid fa-arrow-down-wide-short mr-1"></i>Сортировка:</label>
+                    <select id="sortBy" class="bg-stone-50 border border-stone-200 text-stone-700 text-sm rounded-xl focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 py-2 px-3 outline-none">
+                        <option value="created-desc">Сначала новые</option>
+                        <option value="price-asc">Цена ₸: по возрастанию</option>
+                        <option value="price-desc">Цена ₸: по убыванию</option>
+                        <option value="priority-desc">Приоритет: сначала высокий</option>
+                    </select>
+                </div>
+            </div>
+
+            <hr class="border-stone-100">
+
+            <!-- Category Filters -->
+            <div class="flex flex-wrap gap-2 items-center">
+                <span class="text-xs font-semibold text-stone-400 mr-1">Категория:</span>
+                <div id="categoryFilters" class="flex flex-wrap gap-1.5">
+                    <!-- Dynamic Category Buttons -->
+                </div>
+            </div>
+
+            <!-- Status Filters -->
+            <div class="flex flex-wrap gap-2 items-center pt-1">
+                <span class="text-xs font-semibold text-stone-400 mr-1">Статус:</span>
+                <div id="statusFilters" class="flex flex-wrap gap-1.5">
+                    <button data-status="all" class="status-btn px-3 py-1 rounded-lg text-xs font-medium transition-all bg-stone-800 text-white">Все</button>
+                    <button data-status="free" class="status-btn px-3 py-1 rounded-lg text-xs font-medium transition-all bg-stone-100 text-stone-600 hover:bg-stone-200">Свободные</button>
+                    <button data-status="reserved" class="status-btn px-3 py-1 rounded-lg text-xs font-medium transition-all bg-stone-100 text-stone-600 hover:bg-stone-200">Забронированные</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="wishlistGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Dynamic Gift Cards -->
+        </section>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden text-center py-16 bg-white rounded-3xl border border-dashed border-stone-200 p-8">
+            <div class="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-500 text-3xl">
+                <i class="fa-solid fa-gift"></i>
+            </div>
+            <h3 class="text-lg font-bold text-stone-800 mb-1">Список пуст или ничего не найдено</h3>
+            <p class="text-stone-500 text-sm max-w-sm mx-auto mb-6">Попробуйте изменить параметры фильтрации или добавьте новое желание!</p>
+            <button id="emptyAddBtn" class="owner-only px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-medium text-sm transition-all shadow-sm">
+                Добавить подарок
+            </button>
+        </div>
+
+    </main>
+
+    <footer class="bg-white border-t border-stone-100 py-6 mt-12 text-center text-xs text-stone-400">
+        <div class="max-w-6xl mx-auto px-4 space-y-1">
+            <p>Список желаний в казахстанских тенге ₸ • Wishlist App</p>
+            <p class="text-stone-300">Создано для удобных подарков и праздников</p>
+        </div>
+    </footer>
+
+    
+    <!-- Modal: Add / Edit Gift (Owner Only) -->
+    <div id="giftModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm hidden transition-opacity">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-stone-100 relative max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center pb-4 border-b border-stone-100">
+                <h3 id="modalTitle" class="text-lg font-bold text-stone-800">Добавить подарок</h3>
+                <button id="closeModalBtn" class="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-500 flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="giftForm" class="space-y-4 pt-4 overflow-y-auto custom-scrollbar pr-1">
+                <input type="hidden" id="giftId">
+
+                <div>
+                    <label class="block text-xs font-semibold text-stone-600 mb-1">Название подарка *</label>
+                    <input type="text" id="giftTitle" required placeholder="Например: Умные часы Apple Watch" class="w-full px-3.5 py-2 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-600 mb-1">Примерная цена (₸)</label>
+                        <div class="relative">
+                            <input type="number" id="giftPrice" min="0" placeholder="150000" class="w-full pl-3.5 pr-8 py-2 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500">
+                            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-stone-400">₸</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-600 mb-1">Приоритет</label>
+                        <select id="giftPriority" class="w-full px-3.5 py-2 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500">
+                            <option value="low">Низкий</option>
+                            <option value="medium" selected>Средний</option>
+                            <option value="high">🔥 Высокий</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-stone-600 mb-1">Категория</label>
+                    <select id="giftCategory" class="w-full px-3.5 py-2 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500">
+                        <option value="Техника">Техника и гаджеты</option>
+                        <option value="Одежда">Одежда и стиль</option>
+                        <option value="Книги">Книги</option>
+                        <option value="Дом">Дом и уют</option>
+                        <option value="Впечатления">Впечатления / Сертификаты</option>
+                        <option value="Другое" selected>Другое</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-stone-600 mb-1">Ссылка на магазин (URL)</label>
+                    <input type="url" id="giftUrl" placeholder="https://kaspi.kz/..." class="w-full px-3.5 py-2 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-stone-600 mb-1">Ссылка на фото (URL)</label>
+                    <input type="url" id="giftImageUrl" placeholder="https://example.com/photo.jpg" class="w-full px-3.5 py-2 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-stone-600 mb-1">Описание / Пожелания</label>
+                    <textarea id="giftNotes" rows="2" placeholder="Размер, цвет или другие детали..." class="w-full px-3.5 py-2 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 resize-none"></textarea>
+                </div>
+
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" id="cancelModalBtn" class="px-4 py-2 rounded-xl border border-stone-200 text-stone-600 font-medium text-sm hover:bg-stone-50">Отмена</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-medium text-sm shadow-sm">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Reserve Gift (Available in Guest/Owner Mode) -->
+    <div id="reserveModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm hidden">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-stone-100">
+            <div class="flex justify-between items-center pb-3 border-b border-stone-100">
+                <h3 class="text-lg font-bold text-stone-800">Забронировать подарок</h3>
+                <button id="closeReserveModalBtn" class="w-8 h-8 rounded-full bg-stone-100 text-stone-500 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="pt-4 space-y-4">
+                <p class="text-xs text-stone-500">Введите ваше имя, чтобы никто другой случайно не подарил то же самое!</p>
+                <input type="hidden" id="reserveGiftId">
+                <div>
+                    <label class="block text-xs font-semibold text-stone-600 mb-1">Ваше имя *</label>
+                    <input type="text" id="reserverName" placeholder="Например: Алия" class="w-full px-3.5 py-2 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500">
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button id="cancelReserveBtn" class="px-4 py-2 rounded-xl border border-stone-200 text-stone-600 font-medium text-sm">Отмена</button>
+                    <button id="confirmReserveBtn" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm shadow-sm">Подтвердить бронь</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Share -->
+    <div id="shareModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-stone-100 space-y-4">
+            <div class="flex justify-between items-center pb-3 border-b border-stone-100">
+                <h3 class="text-lg font-bold text-stone-800">Поделиться с друзьями</h3>
+                <button id="closeShareModalBtn" class="w-8 h-8 rounded-full bg-stone-100 text-stone-500 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3">
+                <label class="block text-xs font-semibold text-stone-600">Ссылка для друзей (откроется в режиме Гостя):</label>
+                <div class="flex gap-2">
+                    <input type="text" id="shareGuestUrl" readonly class="w-full px-3.5 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs font-mono text-stone-700 focus:outline-none">
+                    <button id="copyUrlBtn" class="px-4 py-2 bg-stone-800 hover:bg-stone-900 text-white rounded-xl text-xs font-medium whitespace-nowrap">
+                        Копировать
+                    </button>
+                </div>
+            </div>
+
+            <hr class="border-stone-100">
+
+            <p class="text-xs text-stone-500">Или отправьте сразу в мессенджер:</p>
+
+            <div class="grid grid-cols-2 gap-3">
+                <button id="shareTelegramBtn" class="flex items-center justify-center gap-2 py-2.5 px-4 bg-sky-50 hover:bg-sky-100 text-sky-600 rounded-xl font-medium text-sm transition-colors">
+                    <i class="fa-brands fa-telegram text-lg"></i> Telegram
+                </button>
+                <button id="shareWhatsAppBtn" class="flex items-center justify-center gap-2 py-2.5 px-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded-xl font-medium text-sm transition-colors">
+                    <i class="fa-brands fa-whatsapp text-lg"></i> WhatsApp
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-stone-800 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 text-sm pointer-events-none">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toastMessage">Сообщение</span>
+    </div>
+
+    <script>
+        // Initial Demo Data with Tenge (₸) Prices
+        const initialDemoGifts = [
+            {
+                id: '1',
+                title: 'Беспроводные наушники Sony WH-1000XM5',
+                price: 185000,
+                category: 'Техника',
+                priority: 'high',
+                url: 'https://kaspi.kz',
+                imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80',
+                notes: 'В черном или бежевом цвете.',
+                isReserved: false,
+                reservedBy: '',
+                createdAt: Date.now() - 10000
+            },
+            {
+                id: '2',
+                title: 'Набор кофеварки Pour-Over',
+                price: 28000,
+                category: 'Дом',
+                priority: 'medium',
+                url: '',
+                imageUrl: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80',
+                notes: 'Воронка Hario V60 + стеклянный чайник.',
+                isReserved: true,
+                reservedBy: 'Айдос',
+                createdAt: Date.now() - 50000
+            },
+            {
+                id: '3',
+                title: 'Сертификат на SPA-массаж',
+                price: 45000,
+                category: 'Впечатления',
+                priority: 'medium',
+                url: '',
+                imageUrl: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=600&q=80',
+                notes: 'На расслабляющий часовой массаж.',
+                isReserved: false,
+                reservedBy: '',
+                createdAt: Date.now() - 80000
+            },
+            {
+                id: '4',
+                title: 'Книга «Атомные привычки»',
+                price: 6500,
+                category: 'Книги',
+                priority: 'low',
+                url: '',
+                imageUrl: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80',
+                notes: 'Твердый переплет.',
+                isReserved: false,
+                reservedBy: '',
+                createdAt: Date.now() - 120000
+            }
+        ];
+
+        // Format Tenge Currency
+        function formatTenge(amount) {
+            if (!amount && amount !== 0) return '—';
+            return amount.toLocaleString('ru-RU') + ' ₸';
+        }
+
+        // State Management
+        let gifts = JSON.parse(localStorage.getItem('wishlist_v2_kzt')) || initialDemoGifts;
+        let currentRole = 'owner'; // 'owner' or 'guest'
+        let selectedCategory = 'all';
+        let selectedStatus = 'all';
+        let searchQuery = '';
+        let currentSort = 'created-desc';
+
+        // DOM Elements
+        const wishlistGrid = document.getElementById('wishlistGrid');
+        const emptyState = document.getElementById('emptyState');
+        const statTotalItems = document.getElementById('statTotalItems');
+        const statReservedItems = document.getElementById('statReservedItems');
+        const statTotalPrice = document.getElementById('statTotalPrice');
+        const statReservedPrice = document.getElementById('statReservedPrice');
+        const progressBar = document.getElementById('progressBar');
+        const progressPercent = document.getElementById('progressPercent');
+        const categoryFilters = document.getElementById('categoryFilters');
+        const searchInput = document.getElementById('searchInput');
+        const sortBy = document.getElementById('sortBy');
+        const guestNoticeBar = document.getElementById('guestNoticeBar');
+        const modeBadge = document.getElementById('modeBadge');
+        const headerSubtitle = document.getElementById('headerSubtitle');
+
+        // Buttons
+        const btnRoleOwner = document.getElementById('btnRoleOwner');
+        const btnRoleGuest = document.getElementById('btnRoleGuest');
+
+        // Modals
+        const giftModal = document.getElementById('giftModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const giftForm = document.getElementById('giftForm');
+        const reserveModal = document.getElementById('reserveModal');
+        const shareModal = document.getElementById('shareModal');
+
+        const categories = ['Техника', 'Одежда', 'Книги', 'Дом', 'Впечатления', 'Другое'];
+
+        function init() {
+            // Check URL parameters for mode
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('mode') === 'guest') {
+                currentRole = 'guest';
+            }
+
+            updateRoleUI();
+            renderCategoryFilters();
+            renderWishlist();
+            setupEventListeners();
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('wishlist_v2_kzt', JSON.stringify(gifts));
+        }
+
+        function setRole(role) {
+            currentRole = role;
+            updateRoleUI();
+            renderWishlist();
+        }
+
+        function updateRoleUI() {
+            const ownerElements = document.querySelectorAll('.owner-only');
+
+            if (currentRole === 'owner') {
+                modeBadge.textContent = 'Владелец';
+                modeBadge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-700';
+                headerSubtitle.textContent = 'Мой список желаний в тенге (₸)';
+                guestNoticeBar.classList.add('hidden');
+
+                btnRoleOwner.className = 'px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 bg-white text-stone-800 shadow-sm';
+                btnRoleGuest.className = 'px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 text-stone-500 hover:text-stone-800';
+
+                ownerElements.forEach(el => el.classList.remove('hidden'));
+            } else {
+                modeBadge.textContent = 'Гость (Друг)';
+                modeBadge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800';
+                headerSubtitle.textContent = 'Выберите подарок для друга';
+                guestNoticeBar.classList.remove('hidden');
+
+                btnRoleOwner.className = 'px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 text-stone-500 hover:text-stone-800';
+                btnRoleGuest.className = 'px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 bg-white text-stone-800 shadow-sm';
+
+                ownerElements.forEach(el => el.classList.add('hidden'));
+            }
+        }
+
+        function renderCategoryFilters() {
+            categoryFilters.innerHTML = `
+                <button data-cat="all" class="cat-btn px-3 py-1 rounded-lg text-xs font-medium transition-all ${selectedCategory === 'all' ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}">Все</button>
+            ` + categories.map(cat => `
+                <button data-cat="${cat}" class="cat-btn px-3 py-1 rounded-lg text-xs font-medium transition-all ${selectedCategory === cat ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}">${cat}</button>
+            `).join('');
+        }
+
+        function getFilteredGifts() {
+            return gifts.filter(gift => {
+                if (selectedCategory !== 'all' && gift.category !== selectedCategory) return false;
+                if (selectedStatus === 'free' && gift.isReserved) return false;
+                if (selectedStatus === 'reserved' && !gift.isReserved) return false;
+
+                if (searchQuery.trim() !== '') {
+                    const q = searchQuery.toLowerCase();
+                    const titleMatch = gift.title.toLowerCase().includes(q);
+                    const notesMatch = gift.notes && gift.notes.toLowerCase().includes(q);
+                    if (!titleMatch && !notesMatch) return false;
+                }
+
+                return true;
+            }).sort((a, b) => {
+                if (currentSort === 'price-asc') return (a.price || 0) - (b.price || 0);
+                if (currentSort === 'price-desc') return (b.price || 0) - (a.price || 0);
+                if (currentSort === 'priority-desc') {
+                    const priorityWeight = { high: 3, medium: 2, low: 1 };
+                    return priorityWeight[b.priority] - priorityWeight[a.priority];
+                }
+                return b.createdAt - a.createdAt;
+            });
+        }
+
+        function updateStats() {
+            const total = gifts.length;
+            const reserved = gifts.filter(g => g.isReserved).length;
+            const totalPrice = gifts.reduce((sum, g) => sum + (Number(g.price) || 0), 0);
+            const reservedPrice = gifts.filter(g => g.isReserved).reduce((sum, g) => sum + (Number(g.price) || 0), 0);
+            const percent = total > 0 ? Math.round((reserved / total) * 100) : 0;
+
+            statTotalItems.textContent = total;
+            statReservedItems.textContent = reserved;
+            statTotalPrice.textContent = formatTenge(totalPrice);
+            statReservedPrice.textContent = formatTenge(reservedPrice);
+
+            progressBar.style.width = `${percent}%`;
+            progressPercent.textContent = `${percent}%`;
+        }
+
+        function renderWishlist() {
+            updateStats();
+            const filtered = getFilteredGifts();
+
+            if (filtered.length === 0) {
+                wishlistGrid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            wishlistGrid.innerHTML = filtered.map(gift => {
+                const priorityBadge = {
+                    high: '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700">🔥 Высокий</span>',
+                    medium: '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">Средний</span>',
+                    low: '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">Низкий</span>'
+                }[gift.priority] || '';
+
+                const imgPlaceholder = `https://placehold.co/600x400/fecdd3/be123c?text=${encodeURIComponent(gift.title.slice(0, 15))}`;
+
+                return `
+                <div class="bg-white rounded-3xl border border-stone-200/80 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col overflow-hidden relative group ${gift.isReserved ? 'opacity-90 bg-stone-50/50' : ''}">
+                    <!-- Image Area -->
+                    <div class="h-48 w-full bg-stone-100 relative overflow-hidden">
+                        <img src="${gift.imageUrl || imgPlaceholder}" 
+                             onerror="this.src='${imgPlaceholder}'" 
+                             alt="${gift.title}" 
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${gift.isReserved ? 'grayscale-[20%]' : ''}">
+                        
+                        <!-- Badges -->
+                        <div class="absolute top-3 left-3 flex flex-wrap gap-1.5">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-white/90 backdrop-blur-md text-stone-700 shadow-sm">${gift.category}</span>
+                            ${priorityBadge}
+                        </div>
+
+                        ${gift.isReserved ? `
+                            <div class="absolute top-3 right-3 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md flex items-center gap-1.5">
+                                <i class="fa-solid fa-check"></i> Забронировано
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="p-5 flex-grow flex flex-col justify-between space-y-4">
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-start gap-2">
+                                <h3 class="font-bold text-stone-800 text-base leading-snug line-clamp-2 ${gift.isReserved ? 'line-through text-stone-500' : ''}">
+                                    ${gift.title}
+                                </h3>
+                                <span class="text-base font-extrabold text-rose-600 whitespace-nowrap">
+                                    ${formatTenge(gift.price)}
+                                </span>
+                            </div>
+
+                            ${gift.notes ? `<p class="text-xs text-stone-500 line-clamp-2">${gift.notes}</p>` : ''}
+                        </div>
+
+                        ${gift.isReserved && gift.reservedBy ? `
+                            <div class="text-xs bg-emerald-50 text-emerald-800 p-2.5 rounded-xl border border-emerald-100 flex items-center gap-2">
+                                <i class="fa-solid fa-user-check text-emerald-600"></i>
+                                <span>Забронировал(а): <strong>${gift.reservedBy}</strong></span>
+                            </div>
+                        ` : ''}
+
+                        <!-- Action Bar (Differentiates Owner vs Guest) -->
+                        <div class="pt-3 border-t border-stone-100 flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-1">
+                                ${gift.url ? `
+                                    <a href="${gift.url}" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition-colors" title="Открыть в магазине">
+                                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                    </a>
+                                ` : ''}
+
+                                ${currentRole === 'owner' ? `
+                                    <button onclick="openEditModal('${gift.id}')" class="p-2 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors" title="Редактировать">
+                                        <i class="fa-regular fa-pen-to-square"></i>
+                                    </button>
+                                    <button onclick="deleteGift('${gift.id}')" class="p-2 rounded-xl text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition-colors" title="Удалить">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+
+                            <!-- Booking Actions -->
+                            <div>
+                                ${gift.isReserved ? `
+                                    <button onclick="unreserveGift('${gift.id}')" class="px-3 py-1.5 rounded-xl border border-stone-200 text-stone-600 hover:bg-stone-100 text-xs font-semibold transition-colors">
+                                        ${currentRole === 'owner' ? 'Снять бронь' : 'Снять мою бронь'}
+                                    </button>
+                                ` : `
+                                    <button onclick="openReserveModal('${gift.id}')" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm transition-all active:scale-95 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-gift"></i> Забронировать
+                                    </button>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function setupEventListeners() {
+            btnRoleOwner.addEventListener('click', () => setRole('owner'));
+            btnRoleGuest.addEventListener('click', () => setRole('guest'));
+
+            categoryFilters.addEventListener('click', (e) => {
+                const btn = e.target.closest('.cat-btn');
+                if (!btn) return;
+                selectedCategory = btn.dataset.cat;
+                renderCategoryFilters();
+                renderWishlist();
+            });
+
+            document.getElementById('statusFilters').addEventListener('click', (e) => {
+                const btn = e.target.closest('.status-btn');
+                if (!btn) return;
+                selectedStatus = btn.dataset.status;
+                
+                document.querySelectorAll('.status-btn').forEach(b => {
+                    b.classList.remove('bg-stone-800', 'text-white');
+                    b.classList.add('bg-stone-100', 'text-stone-600');
+                });
+                btn.classList.remove('bg-stone-100', 'text-stone-600');
+                btn.classList.add('bg-stone-800', 'text-white');
+
+                renderWishlist();
+            });
+
+            searchInput.addEventListener('input', (e) => {
+                searchQuery = e.target.value;
+                renderWishlist();
+            });
+
+            sortBy.addEventListener('change', (e) => {
+                currentSort = e.target.value;
+                renderWishlist();
+            });
+
+            document.getElementById('openAddModalBtn').addEventListener('click', () => openAddModal());
+            document.getElementById('emptyAddBtn').addEventListener('click', () => openAddModal());
+            document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+            document.getElementById('cancelModalBtn').addEventListener('click', closeModal);
+
+            giftForm.addEventListener('submit', handleGiftSubmit);
+
+            document.getElementById('closeReserveModalBtn').addEventListener('click', closeReserveModal);
+            document.getElementById('cancelReserveBtn').addEventListener('click', closeReserveModal);
+            document.getElementById('confirmReserveBtn').addEventListener('click', handleReserveSubmit);
+
+            document.getElementById('shareBtn').addEventListener('click', openShareModal);
+            document.getElementById('closeShareModalBtn').addEventListener('click', closeShareModal);
+            document.getElementById('copyUrlBtn').addEventListener('click', copyGuestUrl);
+            document.getElementById('shareTelegramBtn').addEventListener('click', shareTelegram);
+            document.getElementById('shareWhatsAppBtn').addEventListener('click', shareWhatsApp);
+
+            document.getElementById('resetDemoBtn').addEventListener('click', resetToDemoData);
+        }
+
+        function openAddModal() {
+            giftForm.reset();
+            document.getElementById('giftId').value = '';
+            modalTitle.textContent = 'Добавить подарок';
+            giftModal.classList.remove('hidden');
+        }
+
+        function openEditModal(id) {
+            const gift = gifts.find(g => g.id === id);
+            if (!gift) return;
+
+            document.getElementById('giftId').value = gift.id;
+            document.getElementById('giftTitle').value = gift.title;
+            document.getElementById('giftPrice').value = gift.price || '';
+            document.getElementById('giftPriority').value = gift.priority || 'medium';
+            document.getElementById('giftCategory').value = gift.category || 'Другое';
+            document.getElementById('giftUrl').value = gift.url || '';
+            document.getElementById('giftImageUrl').value = gift.imageUrl || '';
+            document.getElementById('giftNotes').value = gift.notes || '';
+
+            modalTitle.textContent = 'Редактировать подарок';
+            giftModal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            giftModal.classList.add('hidden');
+        }
+
+        function handleGiftSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('giftId').value;
+            const title = document.getElementById('giftTitle').value.trim();
+            const price = Number(document.getElementById('giftPrice').value) || 0;
+            const priority = document.getElementById('giftPriority').value;
+            const category = document.getElementById('giftCategory').value;
+            const url = document.getElementById('giftUrl').value.trim();
+            const imageUrl = document.getElementById('giftImageUrl').value.trim();
+            const notes = document.getElementById('giftNotes').value.trim();
+
+            if (id) {
+                gifts = gifts.map(g => g.id === id ? {
+                    ...g, title, price, priority, category, url, imageUrl, notes
+                } : g);
+                showToast('Подарок обновлен!');
+            } else {
+                const newGift = {
+                    id: Date.now().toString(),
+                    title, price, priority, category, url, imageUrl, notes,
+                    isReserved: false,
+                    reservedBy: '',
+                    createdAt: Date.now()
+                };
+                gifts.unshift(newGift);
+                showToast('Новый подарок добавлен!');
+            }
+
+            saveToStorage();
+            renderWishlist();
+            closeModal();
+        }
+
+        function deleteGift(id) {
+            gifts = gifts.filter(g => g.id !== id);
+            saveToStorage();
+            renderWishlist();
+            showToast('Подарок удален из списка');
+        }
+
+        function openReserveModal(id) {
+            document.getElementById('reserveGiftId').value = id;
+            document.getElementById('reserverName').value = '';
+            reserveModal.classList.remove('hidden');
+        }
+
+        function closeReserveModal() {
+            reserveModal.classList.add('hidden');
+        }
+
+        function handleReserveSubmit() {
+            const id = document.getElementById('reserveGiftId').value;
+            const name = document.getElementById('reserverName').value.trim();
+
+            gifts = gifts.map(g => g.id === id ? {
+                ...g,
+                isReserved: true,
+                reservedBy: name || 'Анонимный друг'
+            } : g);
+
+            saveToStorage();
+            renderWishlist();
+            closeReserveModal();
+            showToast('Спасибо! Подарок забронирован!');
+        }
+
+        function unreserveGift(id) {
+            gifts = gifts.map(g => g.id === id ? {
+                ...g,
+                isReserved: false,
+                reservedBy: ''
+            } : g);
+
+            saveToStorage();
+            renderWishlist();
+            showToast('Бронь успешно снята');
+        }
+
+        function resetToDemoData() {
+            gifts = [...initialDemoGifts];
+            saveToStorage();
+            renderWishlist();
+            showToast('Демо-данные восстановлены!');
+        }
+
+        function getGuestShareUrl() {
+            const baseUrl = window.location.href.split('?')[0];
+            return `${baseUrl}?mode=guest`;
+        }
+
+        function openShareModal() {
+            const shareGuestUrlInput = document.getElementById('shareGuestUrl');
+            shareGuestUrlInput.value = getGuestShareUrl();
+            shareModal.classList.remove('hidden');
+        }
+
+        function closeShareModal() {
+            shareModal.classList.add('hidden');
+        }
+
+        function copyGuestUrl() {
+            const input = document.getElementById('shareGuestUrl');
+            input.select();
+            document.execCommand('copy');
+            showToast('Ссылка для друзей скопирована!');
+        }
+
+        function shareTelegram() {
+            const url = encodeURIComponent(getGuestShareUrl());
+            const text = encodeURIComponent("Привет! Вот мой список желаний 🎁 Выбирай, что подарить:");
+            window.open(`https://t.me/share/url?url=${url}&text=${text}`, '_blank');
+        }
+
+        function shareWhatsApp() {
+            const url = encodeURIComponent(getGuestShareUrl());
+            const text = encodeURIComponent(`Привет! Вот мой список желаний 🎁: ${url}`);
+            window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = msg;
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
